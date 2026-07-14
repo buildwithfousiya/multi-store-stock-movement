@@ -1,0 +1,581 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Multi-Store Stock Movement API",
+    "description": "API specifications for the Multi-Store Stock Movement backend system, including authentication, products, stores, and stock management.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local Development Server"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Create a new user account with 'shopper' role by default.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "john@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "supersecurepassword123"
+                  }
+                },
+                "required": ["name", "email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+                            "name": { "type": "string", "example": "John Doe" },
+                            "email": { "type": "string", "example": "john@example.com" },
+                            "role": { "type": "string", "example": "shopper" }
+                          }
+                        },
+                        "token": {
+                          "type": "string",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "All fields required / Validation error"
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Log in an existing user",
+        "description": "Authenticate user credentials and receive a JWT token.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "john@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "supersecurepassword123"
+                  }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+                            "name": { "type": "string", "example": "John Doe" },
+                            "email": { "type": "string", "example": "john@example.com" },
+                            "role": { "type": "string", "example": "shopper" }
+                          }
+                        },
+                        "token": {
+                          "type": "string",
+                          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email and password required"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "summary": "Retrieve all products",
+        "description": "Get a list of all products in reverse chronological order.",
+        "responses": {
+          "200": {
+            "description": "Successful retrieval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 2 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "products": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Product"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized token"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new product",
+        "description": "Create a new product. Restricted to admin role only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "example": "Wireless Mouse" },
+                  "sku": { "type": "string", "example": "WM-001" }
+                },
+                "required": ["name", "sku"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "product": {
+                          "$ref": "#/components/schemas/Product"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Product name and SKU required"
+          },
+          "401": {
+            "description": "Unauthorized token"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        }
+      }
+    },
+    "/api/stores": {
+      "get": {
+        "summary": "Retrieve all stores",
+        "description": "Get a list of all stores in reverse chronological order.",
+        "responses": {
+          "200": {
+            "description": "Successful retrieval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 1 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "stores": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Store"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized token"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new store",
+        "description": "Create a new store. Restricted to admin role only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "example": "Downtown Store" }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Store created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "store": {
+                          "$ref": "#/components/schemas/Store"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Store name required"
+          },
+          "401": {
+            "description": "Unauthorized token"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        }
+      }
+    },
+    "/api/stock": {
+      "get": {
+        "summary": "Retrieve stock levels",
+        "description": "Retrieve stock levels with optional filtering by product, store, or a low-stock threshold.",
+        "parameters": [
+          {
+            "name": "product",
+            "in": "query",
+            "description": "Filter by product ID",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "Filter by store ID",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "threshold",
+            "in": "query",
+            "description": "Filter quantity less than or equal to this value",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieval of stock levels",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "count": { "type": "integer", "example": 1 },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "stock": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/StockEntry"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Threshold must be a number"
+          },
+          "401": {
+            "description": "Unauthorized token"
+          }
+        }
+      }
+    },
+    "/api/stock/adjust": {
+      "post": {
+        "summary": "Adjust stock level",
+        "description": "Add or subtract stock for a specific product at a specific store. Restricted to admin role only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+                  "storeId": { "type": "string", "example": "60d0fe4f5311236168a109cb" },
+                  "quantity": { "type": "number", "example": 50 }
+                },
+                "required": ["productId", "storeId", "quantity"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock adjusted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "stock": {
+                          "$ref": "#/components/schemas/StockEntry"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing fields / Invalid quantity / Insufficient stock (cannot adjust below 0)"
+          },
+          "401": {
+            "description": "Unauthorized token"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        }
+      }
+    },
+    "/api/stock/transfer": {
+      "post": {
+        "summary": "Transfer stock between stores",
+        "description": "Transfer stock of a specific product from a source store to a destination store. Restricted to admin role only.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+                  "fromStoreId": { "type": "string", "example": "60d0fe4f5311236168a109cb" },
+                  "toStoreId": { "type": "string", "example": "60d0fe4f5311236168a109cc" },
+                  "quantity": { "type": "integer", "example": 10 }
+                },
+                "required": ["productId", "fromStoreId", "toStoreId", "quantity"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock transferred successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "$ref": "#/components/schemas/StockEntry"
+                        },
+                        "to": {
+                          "$ref": "#/components/schemas/StockEntry"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing fields / Invalid quantity / Insufficient stock at source store"
+          },
+          "401": {
+            "description": "Unauthorized token"
+          },
+          "403": {
+            "description": "Admin access required"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+          "name": { "type": "string", "example": "Wireless Mouse" },
+          "sku": { "type": "string", "example": "WM-001" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2026-07-14T07:00:41Z" },
+          "updatedAt": { "type": "string", "format": "date-time", "example": "2026-07-14T07:00:41Z" }
+        }
+      },
+      "Store": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "60d0fe4f5311236168a109cb" },
+          "name": { "type": "string", "example": "Downtown Store" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2026-07-14T07:00:41Z" },
+          "updatedAt": { "type": "string", "format": "date-time", "example": "2026-07-14T07:00:41Z" }
+        }
+      },
+      "StockEntry": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "60d0fe4f5311236168a109cd" },
+          "product": {
+            "anyOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "properties": {
+                  "_id": { "type": "string" },
+                  "name": { "type": "string" },
+                  "sku": { "type": "string" }
+                }
+              }
+            ],
+            "example": {
+              "_id": "60d0fe4f5311236168a109ca",
+              "name": "Wireless Mouse",
+              "sku": "WM-001"
+            }
+          },
+          "store": {
+            "anyOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "properties": {
+                  "_id": { "type": "string" },
+                  "name": { "type": "string" }
+                }
+              }
+            ],
+            "example": {
+              "_id": "60d0fe4f5311236168a109cb",
+              "name": "Downtown Store"
+            }
+          },
+          "quantity": { "type": "integer", "example": 75 },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2026-07-14T07:00:41Z" },
+          "updatedAt": { "type": "string", "format": "date-time", "example": "2026-07-14T07:00:41Z" }
+        }
+      }
+    }
+  }
+}
