@@ -9,15 +9,35 @@ const RegisterPage = ({ onRegisterSuccess }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  const validateInputs = (name, email, password) => {
+    if (!name.trim()) return 'Full Name is required.';
+    if (!email) return 'Email is required.';
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address.';
+    }
+
+    if (!password) return 'Password is required.';
+    return null;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    const validationError = validateInputs(name, email, password);
+    if (validationError) {
+      setError(validationError);
+      setLoading(false);
+      return;
+    }
+
     try {
       const apiBaseUrl = import.meta.env.VITE_API_URL;
-      const res = await axios.post(`${apiBaseUrl}/api/auth/register`, { name, email, password});
+      const res = await axios.post(`${apiBaseUrl}/api/auth/register`, { name, email, password });
       const { user: userData, token } = res.data.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -60,7 +80,7 @@ const RegisterPage = ({ onRegisterSuccess }) => {
             <label htmlFor="email">Email</label>
             <input
               id="email"
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
